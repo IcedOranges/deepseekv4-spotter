@@ -4,11 +4,9 @@
 
 # DeepSeekV4 Spotter
 
-[中文](#中文) | [English](#english)
+English version: [README_EN.md](./README_EN.md)
 
-## 中文
-
-### 项目简介
+## 项目简介
 DeepSeekV4 Spotter 是一个面向 DeepSeek v4 的早期信号监控器。
 
 监控来源：
@@ -24,7 +22,7 @@ DeepSeekV4 Spotter 是一个面向 DeepSeek v4 的早期信号监控器。
 - 调用你自定义的 webhook
 - 播放告警音乐（默认 `default_music.mp3`）
 
-### 一键安装
+## 一键安装
 在仓库根目录执行：
 
 ```bash
@@ -38,7 +36,7 @@ bash install.sh
 bash install.sh --no-system
 ```
 
-### 启动服务
+## 启动服务
 
 ```bash
 python lite_server.py --host 0.0.0.0 --port 8000 --interval-seconds 600
@@ -47,7 +45,7 @@ python lite_server.py --host 0.0.0.0 --port 8000 --interval-seconds 600
 打开：
 - `http://127.0.0.1:8000/`
 
-### Web UI
+## Web UI
 - 主界面：情绪化监控器视图（简洁展示）
 - 详细面板：可设置 webhook、上传自定义 mp3、查看配置与事件流
 
@@ -55,7 +53,7 @@ python lite_server.py --host 0.0.0.0 --port 8000 --interval-seconds 600
 - `runtime_settings.json`
 - `user_audio/`
 
-### 常用环境变量
+## 常用环境变量
 
 ```bash
 export POLL_INTERVAL_SECONDS="600"
@@ -69,80 +67,7 @@ export WATCH_DEEPSEEK_V4_REGEX="deepseek\\s*[-_]?\\s*v4(\\b|\\.)"
 export GITHUB_TOKEN="ghp_xxx"
 ```
 
-### API
-- `GET /`
-- `GET /api/config`
-- `GET /api/events?limit=80`
-- `POST /api/poll`
-- `POST /api/settings`
-- `POST /api/upload_audio`
-
----
-
-## English
-
-### Overview
-DeepSeekV4 Spotter is an early-signal monitor for DeepSeek v4.
-
-Sources:
-- DeepSeek homepage model label (`https://www.deepseek.com/`)
-- GitHub repo events (only `PushEvent`, `PullRequestEvent`, `ReleaseEvent`) from:
-`vllm-project/vllm`, `vllm-project/vllm-ascend`, `huggingface/transformers`
-
-Triggers:
-- Homepage model transitions from non-v4 to `v4/v4.*`
-- New GitHub event matches DeepSeek v4 keyword pattern
-
-Actions:
-- Send your custom webhook
-- Play alert music (default: `default_music.mp3`)
-
-### One-click Install
-Run in repo root:
-
-```bash
-chmod +x install.sh
-bash install.sh
-```
-
-Install only Python venv/deps (skip system packages):
-
-```bash
-bash install.sh --no-system
-```
-
-### Start
-
-```bash
-python lite_server.py --host 0.0.0.0 --port 8000 --interval-seconds 600
-```
-
-Open:
-- `http://127.0.0.1:8000/`
-
-### Web UI
-- Main monitor view: simplified emotional console
-- Detailed panel: configure webhook, upload custom mp3, inspect config/events
-
-Runtime local files (ignored by git):
-- `runtime_settings.json`
-- `user_audio/`
-
-### Common Environment Variables
-
-```bash
-export POLL_INTERVAL_SECONDS="600"
-export FEISHU_WEBHOOK_URL="https://your-webhook-url"
-export ALERT_MP3_PATH="./default_music.mp3"
-export ALERT_LOOPS="10"
-export ALERT_INTERVAL_SECONDS="10"
-export ALERT_ONCE="1"
-export WATCH_GITHUB_REPOS="vllm-project/vllm,vllm-project/vllm-ascend,huggingface/transformers"
-export WATCH_DEEPSEEK_V4_REGEX="deepseek\\s*[-_]?\\s*v4(\\b|\\.)"
-export GITHUB_TOKEN="ghp_xxx"
-```
-
-### API
+## API
 - `GET /`
 - `GET /api/config`
 - `GET /api/events?limit=80`
