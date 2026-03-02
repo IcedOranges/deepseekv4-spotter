@@ -6,6 +6,7 @@ import json
 import os
 import threading
 import time
+from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Any, Dict
 from urllib.parse import parse_qs, urlparse
@@ -17,6 +18,22 @@ from runtime_settings import load_runtime_settings, save_uploaded_mp3, update_ru
 
 
 _DEFAULT_MP3 = os.path.abspath(os.path.join(os.path.dirname(__file__), "default_music.mp3"))
+_POLL_META_LOCK = threading.Lock()
+_POLL_META: Dict[str, Any] = {"last_poll_attempt_at": None}
+
+
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _mark_poll_attempt() -> None:
+    with _POLL_META_LOCK:
+        _POLL_META["last_poll_attempt_at"] = _now_iso()
+
+
+def _get_poll_meta() -> Dict[str, Any]:
+    with _POLL_META_LOCK:
+        return dict(_POLL_META)
 
 
 _HTML = """<!doctype html>
@@ -408,6 +425,7 @@ _HTML = """<!doctype html>
     </header>
 
     <div id=\"statusLine\" class=\"status\">loading...</div>
+    <div id=\"pollAttemptLine\" class=\"status\">loading...</div>
 
     <section class=\"monitor\">
       <h2 id=\"monitorTitle\">Signal Monitor</h2>
@@ -533,6 +551,7 @@ const I18N = {
     idle: '空闲',
     noTrigger: '未触发',
     statusLine: 'provider={provider} | 事件数={events} | 刷新时间={time}',
+    pollAttemptLine: '最近轮询尝试={time}',
     officialChanged: '已偏离基线',
     officialStable: '基线稳定',
     officialNote: '基线={baseline}，最近抓取={lastFetch}',
@@ -618,6 +637,7 @@ const I18N = {
     idle: 'idle',
     noTrigger: 'no trigger',
     statusLine: 'provider={provider} | events={events} | refreshed={time}',
+    pollAttemptLine: 'last poll attempt={time}',
     officialChanged: 'changed from baseline',
     officialStable: 'stable baseline',
     officialNote: 'Baseline={baseline}, last_fetch={lastFetch}',
@@ -732,12 +752,15 @@ function setSettingsMsg(msg, level) {
 
 function renderTop() {
   const s = document.getElementById('statusLine');
+  const p = document.getElementById('pollAttemptLine');
   const now = new Date().toLocaleString();
+  const lastAttempt = state.cfg?.last_poll_attempt_at ? fmtTime(state.cfg.last_poll_attempt_at) : t('n_a');
   s.textContent = fmt(t('statusLine'), {
     provider: state.cfg?.provider || 'deepseek',
     events: state.events.length,
     time: now,
   });
+  p.textContent = fmt(t('pollAttemptLine'), { time: lastAttempt });
 }
 
 function renderOfficial() {
@@ -1124,6 +1147,16 @@ async function boot() {
   setupToggle();
   setupSettingsActions();
   renderAll();
+
+  // Keep runtime metadata fresh (especially auto-poll timestamps)
+  setInterval(async () => {
+    try {
+      await loadConfig();
+      renderTop();
+    } catch (_) {
+      // ignore transient refresh errors
+    }
+  }, 10000);
 }
 
 document.getElementById('pollBtn').addEventListener('click', pollNow);
@@ -1136,6 +1169,7 @@ boot();
 def _build_config_payload() -> Dict[str, Any]:
     s = get_settings()
     runtime = load_runtime_settings()
+    poll_meta = _get_poll_meta()
 
     return {
         "provider": s.provider,
@@ -1152,6 +1186,7 @@ def _build_config_payload() -> Dict[str, Any]:
         "alert_loops": s.alert_loops,
         "alert_interval_seconds": s.alert_interval_seconds,
         "alert_once": s.alert_once,
+        "last_poll_attempt_at": poll_meta.get("last_poll_attempt_at"),
     }
 
 
@@ -1225,6 +1260,7 @@ class Handler(BaseHTTPRequestHandler):
         p = urlparse(self.path)
 
         if p.path == "/api/poll":
+            _mark_poll_attempt()
             res = poll_homepage_once()
             self._send_json(200, res)
             return
@@ -1315,6 +1351,7 @@ def run(host: str = "127.0.0.1", port: int = 8000) -> None:
             s2 = get_settings()
             if s2.poll_interval_seconds == 0:
                 return
+            _mark_poll_attempt()
             try:
                 poll_homepage_once()
             except Exception:
