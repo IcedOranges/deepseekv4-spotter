@@ -4,7 +4,7 @@ __pycache__/
 *.sqlite3
 *.log
 *.mp3
-!闹钟 2-哔声_爱给网_aigei_com.mp3
+!default_music.mp3
 user_audio/
 runtime_settings.json
 deepseek_tracker_demo/

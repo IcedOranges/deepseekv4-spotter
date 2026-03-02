@@ -63,7 +63,7 @@ def get_settings() -> Settings:
     feishu_webhook_url = (os.getenv("FEISHU_WEBHOOK_URL") or "").strip() or None
 
     default_mp3 = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "闹钟 2-哔声_爱给网_aigei_com.mp3")
+        os.path.join(os.path.dirname(__file__), "default_music.mp3")
     )
     if not os.path.exists(default_mp3):
         default_mp3 = ""
