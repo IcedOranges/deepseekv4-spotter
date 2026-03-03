@@ -16,7 +16,6 @@ from db import connect, init_db, list_events
 from lite_poll import poll_homepage_once
 from runtime_settings import load_runtime_settings, save_uploaded_mp3, update_runtime_settings
 
-
 _DEFAULT_MP3 = os.path.abspath(os.path.join(os.path.dirname(__file__), "default_music.mp3"))
 _POLL_META_LOCK = threading.Lock()
 _POLL_META: Dict[str, Any] = {"last_poll_attempt_at": None}
@@ -755,7 +754,7 @@ function tk(key) {
 }
 
 function fmt(template, values) {
-  return String(template || '').replace(/\{([a-zA-Z0-9_]+)\}/g, (_, k) => {
+  return String(template || '').replace(/\\{([a-zA-Z0-9_]+)\\}/g, (_, k) => {
     const v = values?.[k];
     return (v === undefined || v === null) ? '' : String(v);
   });
